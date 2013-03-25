@@ -16,4 +16,4 @@ The included version of Modernizr is compiled with support for touch events and 
 See the [Bootstrap Slider project][project-site] for complete documentation.
 
 [project-site]: http://www.eyecon.ro/slider-for-twitter-bootstrap.htm
-[modernizr]: http://http://modernizr.com
+[modernizr]: http://modernizr.com
