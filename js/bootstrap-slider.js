@@ -36,6 +36,10 @@
 			this.picker[0].id = this.id;
 		}
 
+		if (typeof Modernizr !== 'undefined' && Modernizr.touch) {
+			this.touchCapable = true;
+		}
+
 		var tooltip = this.element.data('slider-tooltip')||options.tooltip;
 
 		this.tooltip = this.picker.find('.tooltip');
@@ -117,9 +121,11 @@
 		this.offset = this.picker.offset();
 		this.size = this.picker[0][this.sizePos];
 
+		this.formater = options.formater;
+
 		this.layout();
 
-		if (Modernizr.touch) {
+		if (this.touchCapable) {
 			// Touch: Bind touch events:
 			this.picker.on({
 				touchstart: $.proxy(this.mousedown, this)
@@ -172,23 +178,23 @@
 			}
 			if (this.range) {
 				this.tooltipInner.text(
-					(this.min + Math.round((this.diff * this.percentage[0]/100)/this.step)*this.step) + 
+					this.formater(this.value[0]) + 
 					' : ' + 
-					(this.min + Math.round((this.diff * this.percentage[1]/100)/this.step)*this.step)
+					this.formater(this.value[1])
 				);
 				this.tooltip[0].style[this.stylePos] = this.size * (this.percentage[0] + (this.percentage[1] - this.percentage[0])/2)/100 - (this.orientation === 'vertical' ? this.tooltip.outerHeight()/2 : this.tooltip.outerWidth()/2) +'px';
 			} else {
 				this.tooltipInner.text(
-					(this.min + Math.round((this.diff * this.percentage[0]/100)/this.step)*this.step)
+					this.formater(this.value[0])
 				);
 				this.tooltip[0].style[this.stylePos] = this.size * this.percentage[0]/100 - (this.orientation === 'vertical' ? this.tooltip.outerHeight()/2 : this.tooltip.outerWidth()/2) +'px';
 			}
 		},
 
 		mousedown: function(ev) {
-			
+
 			// Touch: Get the original event:
-			if (ev.type == 'touchstart') {
+			if (this.touchCapable && ev.type === 'touchstart') {
 				ev = ev.originalEvent;
 			}
 
@@ -208,7 +214,7 @@
 			this.percentage[this.dragged] = percentage;
 			this.layout();
 
-			if (Modernizr.touch) {
+			if (this.touchCapable) {
 				// Touch: Bind touch events:
 				$(document).on({
 					touchmove: $.proxy(this.mousemove, this),
@@ -236,7 +242,7 @@
 		mousemove: function(ev) {
 			
 			// Touch: Get the original event:
-			if (ev.type == 'touchmove') {
+			if (this.touchCapable && ev.type === 'touchmove') {
 				ev = ev.originalEvent;
 			}
 
@@ -264,13 +270,7 @@
 		},
 
 		mouseup: function(ev) {
-			
-			// Touch: Get the original event:
-			if (ev.type == 'touchend') {
-				ev = ev.originalEvent;
-			}
-
-			if (Modernizr.touch) {
+			if (this.touchCapable) {
 				// Touch: Bind touch events:
 				$(document).off({
 					touchmove: this.mousemove,
@@ -315,6 +315,9 @@
 		},
 
 		getPercentage: function(ev) {
+			if (this.touchCapable) {
+				ev = ev.touches[0];
+			}
 			var percentage = (ev[this.mousePos] - this.offset[this.stylePos])*100/this.size;
 			percentage = Math.round(percentage/this.percentage[2])*this.percentage[2];
 			return Math.max(0, Math.min(100, percentage));
@@ -374,7 +377,10 @@
 		value: 5,
 		selection: 'before',
 		tooltip: 'show',
-		handle: 'round'
+		handle: 'round',
+		formater: function(value) {
+			return value;
+		}
 	};
 
 	$.fn.slider.Constructor = Slider;
