@@ -126,9 +126,10 @@
 		this.layout();
 
 		if (this.touchCapable) {
-			// Touch: Bind touch events:
+			// Touch: Bind both touch and mouse events:
 			this.picker.on({
-				touchstart: $.proxy(this.mousedown, this)
+			        touchstart: $.proxy(this.mousedown, this),
+			        mousedown: $.proxy(this.mousedown, this)
 			});
 		} else {
 			this.picker.on({
@@ -192,12 +193,6 @@
 		},
 
 		mousedown: function(ev) {
-
-			// Touch: Get the original event:
-			if (this.touchCapable && ev.type === 'touchstart') {
-				ev = ev.originalEvent;
-			}
-
 			this.offset = this.picker.offset();
 			this.size = this.picker[0][this.sizePos];
 
@@ -215,10 +210,12 @@
 			this.layout();
 
 			if (this.touchCapable) {
-				// Touch: Bind touch events:
+				// Touch: Bind both touch and mouse events:
 				$(document).on({
 					touchmove: $.proxy(this.mousemove, this),
-					touchend: $.proxy(this.mouseup, this)
+				        touchend: $.proxy(this.mouseup, this),
+					mousemove: $.proxy(this.mousemove, this),
+					mouseup: $.proxy(this.mouseup, this)
 				});
 			} else {
 				$(document).on({
@@ -240,12 +237,6 @@
 		},
 
 		mousemove: function(ev) {
-			
-			// Touch: Get the original event:
-			if (this.touchCapable && ev.type === 'touchmove') {
-				ev = ev.originalEvent;
-			}
-
 			var percentage = this.getPercentage(ev);
 			if (this.range) {
 				if (this.dragged === 0 && this.percentage[1] < percentage) {
@@ -271,10 +262,13 @@
 
 		mouseup: function(ev) {
 			if (this.touchCapable) {
-				// Touch: Bind touch events:
+				// Touch: Bind both touch and mouse  events:
 				$(document).off({
 					touchmove: this.mousemove,
-					touchend: this.mouseup
+				        touchend: this.mouseup,
+					mousemove: this.mousemove,
+					mouseup: this.mouseup
+				    
 				});
 			} else {
 				$(document).off({
@@ -314,13 +308,27 @@
 			return val;
 		},
 
-		getPercentage: function(ev) {
+	        getPercentage: function(ev) {
+		        var ev_touch;
+		        var percentage;
 			if (this.touchCapable) {
-				ev = ev.touches[0];
+			        ev_touch = ev.originalEvent;
+                                // If a user uses her mouse on a touch-enabled system use the mouse event
+         	                // to get the percentage value.
+		                try {
+			                ev_touch = ev_touch.touches[0];
+			                percentage = (ev_touch[this.mousePos] - this.offset[this.stylePos])*100/this.size;
+		 	                percentage = Math.round(percentage/this.percentage[2])*this.percentage[2];
+				}
+		                catch(err) {
+			                percentage = (ev[this.mousePos] - this.offset[this.stylePos])*100/this.size;
+			                percentage = Math.round(percentage/this.percentage[2])*this.percentage[2];
+				}
+			} else {
+			        percentage = (ev[this.mousePos] - this.offset[this.stylePos])*100/this.size;
+			        percentage = Math.round(percentage/this.percentage[2])*this.percentage[2];
 			}
-			var percentage = (ev[this.mousePos] - this.offset[this.stylePos])*100/this.size;
-			percentage = Math.round(percentage/this.percentage[2])*this.percentage[2];
-			return Math.max(0, Math.min(100, percentage));
+		        return Math.max(0, Math.min(100, percentage));
 		},
 
 		getValue: function() {
